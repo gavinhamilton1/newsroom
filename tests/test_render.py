@@ -124,7 +124,7 @@ def test_item_parts_rendered(digest):
     assert "Fixture Media · 2026-09-23" in html
     assert 'class="sowhat"' in html and "So what" in html
     assert "CVE-2026-41234</a>" in html and "9.8 Critical (v3.1)" in html
-    assert "Yes, due <span class=\"nowrap\">2026-10-14</span>" in html
+    assert 'Yes, due <span class="nowrap">2026-10-14</span>' in html
     assert 'CVE-2026-99999 <span class="unverified">(unverified)</span>' in html
     assert html.count('class="badge"') == 1  # the one "check" item
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from datetime import UTC, datetime, timedelta
 
@@ -82,6 +83,9 @@ def print_selection(
 def run(args: argparse.Namespace) -> int:
     settings = config.load_settings()
     config.setup_logging(settings.log_level)
+    if not (settings.anthropic_api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+        log.error("ANTHROPIC_API_KEY is not set (see .env.example). Nothing was fetched.")
+        return 2
     now = datetime.now(UTC)
     hours = lookback_hours(now, args.since, settings.lookback_hours)
     since = now - timedelta(hours=hours)
@@ -105,8 +109,6 @@ def run(args: argparse.Namespace) -> int:
         storage = ReadOnlyStorage(storage)
     seen = SeenIndex.load(storage)
 
-    if not settings.anthropic_api_key:
-        log.warning("ANTHROPIC_API_KEY is not set; relying on other SDK credential sources")
     client = make_client(settings)
     tracker = CostTracker(ceiling_usd=settings.max_cost_usd)
     fetcher = Fetcher()
