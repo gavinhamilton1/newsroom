@@ -1,0 +1,237 @@
+# Architecture Dispatch source list
+# Generated 2026-09-24. feed: is filled in by scripts/discover_feeds.py where one exists.
+categories:
+  - id: fin
+    name: "Fintech and financial IT strategy"
+    description: "Sector threats, regulation and banking technology."
+  - id: cyber
+    name: "Cybersecurity and digital identity"
+    description: "Attacks, incidents and identity news with architectural lessons."
+  - id: vuln
+    name: "Vulnerabilities and advisories"
+    description: "Check exploited-in-the-wild first, then the vendor advisory for anything in our stack. Verify every CVE identifier against NVD or the vendor before it is published."
+  - id: ai
+    name: "AI and agentic security"
+    description: "Agent identity, prompt injection and AI supply chain."
+  - id: std
+    name: "Standards and primary sources"
+    description: "Where the definitive text lives; check these before quoting secondary coverage."
+  - id: pqc
+    name: "Quantum and cryptography"
+    description: "Post-quantum migration and crypto agility."
+  - id: arch
+    name: "Enterprise architecture and platform engineering"
+    description: "Engineering practice, platforms, AI-assisted delivery and analyst views."
+sources:
+  - name: "FS-ISAC Newsroom"
+    url: "https://www.fsisac.com/newsroom"
+    category: fin
+    type: curated
+    feed: null
+    note: "Low volume; mostly organisational announcements. Check monthly."
+  - name: "American Banker"
+    url: "https://www.americanbanker.com"
+    category: fin
+    type: news
+    feed: null
+    note: "Strong on bank regulation and technology. Partly paywalled."
+  - name: "ABA Banking Journal"
+    url: "https://bankingjournal.aba.com"
+    category: fin
+    type: news
+    feed: null
+    note: "Regulatory and industry updates for US banks."
+  - name: "FinTech Futures"
+    url: "https://www.fintechfutures.com"
+    category: fin
+    type: news
+    feed: null
+    note: "Mostly funding and hiring news; occasional infrastructure stories."
+  - name: "PYMNTS"
+    url: "https://www.pymnts.com"
+    category: fin
+    type: news
+    feed: null
+    note: "Payments and bank regulation. Homepage dates are unclear; search by topic."
+  - name: "U.S. Treasury press releases"
+    url: "https://home.treasury.gov/news/press-releases"
+    category: fin
+    type: primary
+    feed: null
+    note: "Source for sector-wide initiatives such as the Quantum-Readiness Task Force."
+  - name: "Infosecurity Magazine"
+    url: "https://www.infosecurity-magazine.com"
+    category: cyber
+    type: news
+    feed: null
+  - name: "CSO Online"
+    url: "https://www.csoonline.com"
+    category: cyber
+    type: news
+    feed: null
+    note: "Good depth on identity gateway and session hijacking attacks."
+  - name: "Dark Reading"
+    url: "https://www.darkreading.com"
+    category: cyber
+    type: news
+    feed: null
+  - name: "Biometric Update"
+    url: "https://www.biometricupdate.com"
+    category: cyber
+    type: news
+    feed: null
+    note: "Digital identity, mDLs, KYC and voice fraud."
+  - name: "The Hacker News"
+    url: "https://thehackernews.com"
+    category: cyber
+    type: news
+    feed: null
+    note: "Fast coverage of research and campaigns; verify details at the original research."
+  - name: "OODA Loop"
+    url: "https://oodaloop.com"
+    category: cyber
+    type: curated
+    feed: null
+    note: "Curated briefs and analysis. AI category pages can time out."
+  - name: "Help Net Security"
+    url: "https://www.helpnetsecurity.com"
+    category: cyber
+    type: news
+    feed: null
+    note: "Often the original publisher of vendor research reports."
+  - name: "Cybersecurity News"
+    url: "https://cybersecuritynews.com"
+    category: cyber
+    type: news
+    feed: null
+  - name: "Nextgov/FCW Cybersecurity"
+    url: "https://www.nextgov.com/cybersecurity"
+    category: cyber
+    type: news
+    feed: null
+    note: "US federal policy angle."
+  - name: "CISA Known Exploited Vulnerabilities catalog"
+    url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+    category: vuln
+    type: primary
+    feed: null
+    note: "The highest-signal feed: only vulnerabilities with confirmed exploitation, each with a remediation deadline. JSON feed at cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json is easy to script against."
+  - name: "NVD (National Vulnerability Database)"
+    url: "https://nvd.nist.gov"
+    category: vuln
+    type: primary
+    feed: null
+    note: "Use to verify a CVE identifier, CVSS score and affected versions. REST API at services.nvd.nist.gov/rest/json/cves/2.0. Too high volume to browse."
+  - name: "GitHub Security Advisories"
+    url: "https://github.com/advisories"
+    category: vuln
+    type: primary
+    feed: null
+    note: "Best source for open-source library and AI/agent framework advisories, including MCP-related packages. Filterable by ecosystem."
+  - name: "F5 security advisories"
+    url: "https://my.f5.com/manage/s/article/K000000000"
+    category: vuln
+    type: primary
+    feed: null
+    note: "BIG-IP and APM advisories. The portal often fails to render for automated fetching, so confirm hotfix build strings manually."
+  - name: "GitLab patch releases"
+    url: "https://about.gitlab.com/releases/categories/releases/"
+    category: vuln
+    type: primary
+    feed: null
+    note: "Security patch releases for self-managed GitLab; relevant to CI/CD and pipeline integrity."
+  - name: "Istio security bulletins"
+    url: "https://istio.io/latest/news/security/"
+    category: vuln
+    type: primary
+    feed: null
+    note: "Istio and bundled Envoy CVEs; relevant to service mesh and ingress."
+  - name: "Spring Security advisories"
+    url: "https://spring.io/security"
+    category: vuln
+    type: primary
+    feed: null
+    note: "Spring Framework and Boot CVEs for Java runtimes."
+  - name: "Cloud Security Alliance Lab Space"
+    url: "https://labs.cloudsecurityalliance.org"
+    category: ai
+    type: curated
+    feed: null
+    note: "Research notes on AI and MCP incidents. Homepage is undated; browse the monthly archives."
+  - name: "Adversa AI blog"
+    url: "https://adversa.ai/blog"
+    category: ai
+    type: curated
+    feed: null
+    note: "Monthly MCP and agent security roundups."
+  - name: "Manifold Security blog"
+    url: "https://www.manifold.security/blog"
+    category: ai
+    type: primary
+    feed: null
+    note: "Original research on coding agent and MCP vulnerabilities."
+  - name: "TechCrunch AI"
+    url: "https://techcrunch.com/category/artificial-intelligence"
+    category: ai
+    type: news
+    feed: null
+  - name: "IETF OAuth working group"
+    url: "https://datatracker.ietf.org/wg/oauth/documents/"
+    category: std
+    type: primary
+    feed: null
+    note: "Track document history for last calls and IESG approvals."
+  - name: "NIST News"
+    url: "https://www.nist.gov/news-events/news"
+    category: std
+    type: primary
+    feed: null
+    note: "800-63, token protection, AI agent standards and PQC."
+  - name: "Model Context Protocol"
+    url: "https://modelcontextprotocol.io/specification"
+    category: std
+    type: primary
+    feed: null
+    note: "Spec changelogs; the roadmap is on blog.modelcontextprotocol.io."
+  - name: "The Quantum Insider"
+    url: "https://thequantuminsider.com"
+    category: pqc
+    type: news
+    feed: null
+    note: "Filter for finance and PQC; much of it is quantum computing industry news."
+  - name: "InfoQ"
+    url: "https://www.infoq.com"
+    category: arch
+    type: news
+    feed: null
+    note: "Best source for architecture practice. Only the first news pages paginate reliably."
+  - name: "The New Stack"
+    url: "https://thenewstack.io"
+    category: arch
+    type: news
+    feed: null
+    note: "Platform engineering and AI coding data; check sponsorship disclosures."
+  - name: "CIO Applications"
+    url: "https://www.cioapplications.com"
+    category: arch
+    type: news
+    feed: null
+    note: "Articles show no publication dates; low value for monthly curation."
+  - name: "Gartner Newsroom"
+    url: "https://www.gartner.com/en/newsroom"
+    category: arch
+    type: analyst
+    feed: null
+    note: "Press releases are free; research is behind subscription."
+  - name: "Forrester"
+    url: "https://www.forrester.com"
+    category: arch
+    type: analyst
+    feed: null
+    note: "Blogs update irregularly."
+  - name: "Info-Tech Research Group"
+    url: "https://www.infotech.com"
+    category: arch
+    type: analyst
+    feed: null
+    note: "News page mostly links to external coverage."

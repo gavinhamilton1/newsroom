@@ -1,0 +1,1 @@
+"""Architecture Dispatch daily digest."""
