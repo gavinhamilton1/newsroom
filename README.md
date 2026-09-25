@@ -93,7 +93,7 @@ Exit codes: `0` success, `1` the run was aborted (spend cap reached, or a model 
 
 ### Daylight saving
 
-Render cron schedules are in UTC and do not follow daylight saving. The schedule `"30 10 * * 1-5"` is 06:30 in New York while EDT is in effect (from the second Sunday in March to the first Sunday in November). **When EST starts in November, change the schedule to `"30 11 * * 1-5"`** to keep the 06:30 run, and change it back in March. If you don't, the digest arrives at 05:30 in winter; nothing else changes.
+Render cron schedules are in UTC and do not follow daylight saving. The schedule `"0 9 * * 1-5"` is 05:00 in New York while EDT is in effect (from the second Sunday in March to the first Sunday in November). **When EST starts in November, change the schedule to `"0 10 * * 1-5"`** to keep the 05:00 run, and change it back to `"0 9 * * 1-5"` in March. If you don't, the digest arrives at 04:00 in winter; nothing else changes.
 
 ## Adding a source
 

@@ -3,9 +3,9 @@ services:
     name: dispatch-daily
     runtime: python
     # Render cron schedules are in UTC and do not follow daylight saving.
-    # 10:30 UTC is 06:30 America/New_York during EDT (March to November).
-    # When EST starts in November, change this to "30 11 * * 1-5". See README.
-    schedule: "30 10 * * 1-5"
+    # 09:00 UTC is 05:00 America/New_York during EDT (March to November).
+    # When EST starts in November, change this to "0 10 * * 1-5". See README.
+    schedule: "0 9 * * 1-5"
     buildCommand: pip install -r requirements.txt
     startCommand: python -m dispatch_daily.main
     envVars:
