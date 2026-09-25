@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -76,3 +77,54 @@ def make_client(settings: config.Settings) -> anthropic.Anthropic:
     if settings.anthropic_api_key:
         kwargs["api_key"] = settings.anthropic_api_key
     return anthropic.Anthropic(**kwargs)
+
+
+class ModelOutputError(RuntimeError):
+    """The model refused, ran out of tokens or returned unusable output."""
+
+
+@api_retry
+def _stream_final(client: anthropic.Anthropic, **kwargs) -> anthropic.types.Message:
+    # Streaming keeps long Opus calls clear of HTTP timeouts; we only need the final message.
+    with client.messages.stream(**kwargs) as stream:
+        return stream.get_final_message()
+
+
+def call_structured(
+    client: anthropic.Anthropic,
+    tracker: CostTracker,
+    *,
+    system: str,
+    user: str,
+    schema: dict,
+    max_tokens: int,
+) -> dict:
+    """One writing-model call that must return JSON matching `schema`.
+
+    Opus 5.5 rejects forced tool_choice and sampling parameters, so this uses structured
+    outputs (output_config.format) and effort. Thinking is always on for that model.
+    """
+    kwargs: dict = {
+        "model": config.WRITE_MODEL,
+        "max_tokens": max_tokens,
+        "system": system,
+        "messages": [{"role": "user", "content": user}],
+        "output_config": {
+            "effort": config.WRITE_EFFORT,
+            "format": {"type": "json_schema", "schema": schema},
+        },
+    }
+    if config.WRITE_MODEL_ACCEPTS_TEMPERATURE:
+        kwargs["temperature"] = config.WRITE_TEMPERATURE
+    message = _stream_final(client, **kwargs)
+    tracker.record(config.WRITE_MODEL, message.usage)
+    if message.stop_reason == "refusal":
+        details = getattr(message, "stop_details", None)
+        raise ModelOutputError(f"model refused (category={getattr(details, 'category', None)})")
+    if message.stop_reason == "max_tokens":
+        raise ModelOutputError("model output hit max_tokens")
+    text = "".join(b.text for b in message.content if b.type == "text")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ModelOutputError(f"model returned invalid JSON: {exc}") from exc

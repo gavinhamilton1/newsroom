@@ -100,3 +100,22 @@ def make_storage(settings: config.Settings, local: bool) -> Storage:
             "R2_BUCKET). Set them, or run with --no-upload."
         )
     return R2Storage(settings)
+
+
+class ReadOnlyStorage:
+    """Wraps a Storage so a dry run can read real state without writing anything."""
+
+    def __init__(self, inner: Storage) -> None:
+        self.inner = inner
+
+    def get_text(self, key: str) -> str | None:
+        return self.inner.get_text(key)
+
+    def put_text(self, key: str, body: str, content_type: str) -> None:
+        log.debug("Dry run: not writing %s", key)
+
+    def list_keys(self, prefix: str) -> list[str]:
+        return self.inner.list_keys(prefix)
+
+    def url_for(self, key: str) -> str:
+        return self.inner.url_for(key)

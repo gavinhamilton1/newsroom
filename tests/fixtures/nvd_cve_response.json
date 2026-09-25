@@ -1,0 +1,21 @@
+{
+  "resultsPerPage": 1, "startIndex": 0, "totalResults": 1, "format": "NVD_CVE", "version": "2.0",
+  "timestamp": "2026-09-24T12:00:00.000",
+  "vulnerabilities": [{
+    "cve": {
+      "id": "CVE-2026-41234",
+      "published": "2026-09-22T18:15:10.000",
+      "metrics": {
+        "cvssMetricV31": [
+          {"source": "vendor@example.com", "type": "Secondary",
+           "cvssData": {"version": "3.1", "baseScore": 9.1, "baseSeverity": "CRITICAL"}},
+          {"source": "nvd@nist.gov", "type": "Primary",
+           "cvssData": {"version": "3.1", "baseScore": 9.8, "baseSeverity": "CRITICAL"}}
+        ]
+      },
+      "references": [
+        {"url": "https://example.com/advisory", "tags": ["Vendor Advisory", "Patch"]}
+      ]
+    }
+  }]
+}
