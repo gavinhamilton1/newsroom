@@ -130,6 +130,7 @@ class Settings:
     r2_secret_access_key: str
     r2_bucket: str
     r2_public_base_url: str
+    r2_prefix: str
     digest_max_items: int
     lookback_hours: int
     log_level: str
@@ -156,6 +157,7 @@ def load_settings() -> Settings:
         r2_secret_access_key=env("R2_SECRET_ACCESS_KEY", ""),
         r2_bucket=env("R2_BUCKET", ""),
         r2_public_base_url=env("R2_PUBLIC_BASE_URL", "").rstrip("/"),
+        r2_prefix=env("R2_PREFIX", "").strip().strip("/"),
         digest_max_items=_int_env("DIGEST_MAX_ITEMS", 10),
         lookback_hours=_int_env("LOOKBACK_HOURS", 24),
         log_level=env("LOG_LEVEL", "INFO").upper(),

@@ -204,3 +204,46 @@ def test_publish_writes_digest_record_state_and_index(tmp_path, digest):
     issues = json.loads((tmp_path / "state/issues.json").read_text())["issues"]
     assert issues == [{"date": "2026-09-24", "items": 3}]
     assert "digests/2026-09-24.html" in (tmp_path / "index.html").read_text()
+
+
+def test_r2_storage_keeps_to_prefix():
+    import io
+    from dataclasses import replace
+
+    from dispatch_daily import config
+    from dispatch_daily.publish import R2Storage
+
+    class FakeS3:
+        def __init__(self):
+            self.objects = {"todo/other.json": b"{}"}
+
+        def put_object(self, Bucket, Key, Body, **kwargs):
+            self.objects[Key] = Body
+
+        def get_object(self, Bucket, Key):
+            return {"Body": io.BytesIO(self.objects[Key])}
+
+        def get_paginator(self, name):
+            objects = self.objects
+
+            class P:
+                def paginate(self, Bucket, Prefix):
+                    yield {"Contents": [{"Key": k} for k in objects if k.startswith(Prefix)]}
+
+            return P()
+
+    settings = replace(
+        config.load_settings(),
+        r2_bucket="claude",
+        r2_prefix="newsroom",
+        r2_public_base_url="https://pub-example.r2.dev",
+    )
+    s3 = FakeS3()
+    storage = R2Storage(settings, client=s3)
+    storage.put_text("digests/2026-09-24.html", "<html></html>", "text/html")
+    assert "newsroom/digests/2026-09-24.html" in s3.objects
+    assert storage.get_text("digests/2026-09-24.html") == "<html></html>"
+    assert storage.list_keys("") == ["digests/2026-09-24.html"]  # todo/ is not visible
+    assert storage.url_for("digests/2026-09-24.html") == (
+        "https://pub-example.r2.dev/newsroom/digests/2026-09-24.html"
+    )

@@ -34,6 +34,7 @@ Fill in `.env` (loaded automatically by `python-dotenv` for local runs only; Ren
 | `ANTHROPIC_API_KEY` | Anthropic API key |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | R2 access (see below) |
 | `R2_PUBLIC_BASE_URL` | Public URL of the bucket (r2.dev subdomain or custom domain), no trailing slash |
+| `R2_PREFIX` | Optional folder inside the bucket (e.g. `newsroom`); every key the app reads or writes goes under it |
 | `DIGEST_MAX_ITEMS` | Maximum items in a digest (default 10) |
 | `LOOKBACK_HOURS` | Normal lookback window (default 24; Mondays use 72) |
 | `LOG_LEVEL` | Default `INFO` |
@@ -60,6 +61,8 @@ The tests never touch the network: a fixture blocks socket connections, and the 
 4. To read the digest in a browser, open the bucket's **Settings** and either enable the public **r2.dev** subdomain or connect a custom domain. That URL is `R2_PUBLIC_BASE_URL`.
 
 The app talks to R2 through its S3-compatible API at `https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com` with region `auto`.
+
+If the bucket holds other things, set `R2_PREFIX` (for example `newsroom`) so the app keeps to its own folder; the digest is then at `<R2_PUBLIC_BASE_URL>/newsroom/digests/YYYY-MM-DD.html` and the index at `<R2_PUBLIC_BASE_URL>/newsroom/index.html`. Public access is set per bucket, not per folder, so turning it on for a shared bucket exposes the other folders too. Use a dedicated bucket, or a custom domain with a WAF rule that blocks paths outside `/newsroom/`.
 
 With a public bucket, anyone who has or guesses a URL can read everything in it. That includes `records/` (the claims and quotes behind each issue) and `state/`. Pages carry `noindex`, but that is not access control. If that matters, put the custom domain behind Cloudflare Access.
 

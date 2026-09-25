@@ -25,11 +25,16 @@ class Storage(Protocol):
 
 
 class R2Storage:
-    """Cloudflare R2 via its S3-compatible API."""
+    """Cloudflare R2 via its S3-compatible API.
+
+    Keys are relative to R2_PREFIX (a folder in the bucket, e.g. "newsroom"), so the app
+    never reads or writes anything outside that folder.
+    """
 
     def __init__(self, settings: config.Settings, client=None) -> None:
         self.bucket = settings.r2_bucket
         self.public_base_url = settings.r2_public_base_url
+        self.prefix = f"{settings.r2_prefix}/" if settings.r2_prefix else ""
         self.client = client or boto3.client(
             "s3",
             endpoint_url=settings.r2_endpoint_url,
@@ -41,7 +46,7 @@ class R2Storage:
 
     def get_text(self, key: str) -> str | None:
         try:
-            obj = self.client.get_object(Bucket=self.bucket, Key=key)
+            obj = self.client.get_object(Bucket=self.bucket, Key=self.prefix + key)
         except ClientError as exc:
             if exc.response.get("Error", {}).get("Code") in ("NoSuchKey", "404"):
                 return None
@@ -51,7 +56,7 @@ class R2Storage:
     def put_text(self, key: str, body: str, content_type: str) -> None:
         self.client.put_object(
             Bucket=self.bucket,
-            Key=key,
+            Key=self.prefix + key,
             Body=body.encode("utf-8"),
             ContentType=content_type,
             CacheControl="no-cache" if not key.startswith("digests/") else "max-age=300",
@@ -60,12 +65,13 @@ class R2Storage:
     def list_keys(self, prefix: str) -> list[str]:
         keys: list[str] = []
         paginator = self.client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
-            keys.extend(item["Key"] for item in page.get("Contents", []))
+        for page in paginator.paginate(Bucket=self.bucket, Prefix=self.prefix + prefix):
+            keys.extend(item["Key"].removeprefix(self.prefix) for item in page.get("Contents", []))
         return keys
 
     def url_for(self, key: str) -> str:
-        return f"{self.public_base_url}/{key}" if self.public_base_url else key
+        path = self.prefix + key
+        return f"{self.public_base_url}/{path}" if self.public_base_url else path
 
 
 class LocalStorage:
