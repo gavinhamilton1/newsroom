@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Architecture Dispatch Daily · {{ long_date }}</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --rule: #e3e0d8; --accent: #1f4e79;
+    --sowhat-bg: #eef3f8; --sowhat-rule: #1f4e79; --check-bg: #fff4d6; --check-fg: #7a5600;
+    --kev-bg: #fde8e6; --kev-fg: #9b1c12; --table-head: #f1efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161615; --fg: #e9e7e1; --muted: #a09d95; --rule: #34332f; --accent: #8cb8e3;
+      --sowhat-bg: #1d2630; --sowhat-rule: #8cb8e3; --check-bg: #3a3020; --check-fg: #f1cf7a;
+      --kev-bg: #3d1f1c; --kev-fg: #f3a79f; --table-head: #22211f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 17px/1.6 Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  header.masthead { border-bottom: 3px double var(--rule); padding-bottom: 14px; margin-bottom: 20px; }
+  .kicker { font: 600 12px/1.2 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0; }
+  .intro { font-size: 18px; margin: 18px 0 8px; }
+  nav.toc { font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--muted); margin: 0 0 8px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+  nav.toc a { color: var(--accent); text-decoration: none; white-space: nowrap; }
+  h2.section { font: 700 13px/1.2 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--accent);
+    border-top: 1px solid var(--rule); padding-top: 18px; margin: 34px 0 4px; }
+  article.item { padding: 14px 0 18px; border-bottom: 1px solid var(--rule); }
+  article.item:last-child { border-bottom: 0; }
+  h3 { font-size: 21px; line-height: 1.3; margin: 0 0 4px; }
+  h3 a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  h3 a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .meta { font: 13px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--muted); margin: 0 0 10px; }
+  .badge { display: inline-block; font-weight: 600; font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; padding: 1px 7px; border-radius: 3px; margin-left: 6px;
+    background: var(--check-bg); color: var(--check-fg); vertical-align: 1px; }
+  p.summary { margin: 0 0 12px; }
+  .sowhat { background: var(--sowhat-bg); border-left: 4px solid var(--sowhat-rule);
+    padding: 10px 14px; margin: 0 0 12px; border-radius: 0 4px 4px 0; }
+  .sowhat strong { font: 700 12px/1 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--accent); display: block;
+    margin-bottom: 4px; }
+  .sowhat p { margin: 0; }
+  .tablewrap { overflow-x: auto; margin: 0 0 12px; }
+  table.vulns { border-collapse: collapse; width: 100%;
+    font: 14px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  table.vulns th, table.vulns td { text-align: left; padding: 6px 8px; border: 1px solid var(--rule); }
+  table.vulns th { background: var(--table-head); font-weight: 600; }
+  .kev-yes { background: var(--kev-bg); color: var(--kev-fg); font-weight: 600; }
+  .unverified { color: var(--check-fg); font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  details { font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--muted); }
+  details summary { cursor: pointer; }
+  details ol { padding-left: 20px; margin: 6px 0 0; }
+  details li { margin-bottom: 6px; }
+  details q { font-style: italic; }
+  .empty { font-size: 18px; padding: 24px 0; color: var(--muted); }
+  footer { margin-top: 36px; padding-top: 14px; border-top: 3px double var(--rule);
+    font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--muted); }
+  footer a { color: var(--accent); }
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    h1 { font-size: 25px; }
+    h3 { font-size: 19px; }
+    table.vulns { font-size: 13px; }
+    table.vulns th, table.vulns td { padding: 5px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="kicker">Architecture Dispatch Daily</p>
+    <h1>{{ long_date }}</h1>
+    <p class="intro">{{ digest.intro }}</p>
+    {% if sections|length > 1 %}
+    <nav class="toc">
+      {% for title, items in sections %}<a href="#s{{ loop.index }}">{{ title }} ({{ items|length }})</a>{% endfor %}
+    </nav>
+    {% endif %}
+  </header>
+
+  {% if not sections %}
+  <p class="empty">No items met the bar for today's digest.</p>
+  {% endif %}
+
+  {% for title, items in sections %}
+  <section>
+    <h2 class="section" id="s{{ loop.index }}">{{ title }}</h2>
+    {% for item in items %}
+    <article class="item">
+      <h3><a href="{{ item.url|safe_url }}" rel="noopener noreferrer">{{ item.headline }}</a></h3>
+      <p class="meta">{{ item.publication }}{% if item.published_date %} · {{ item.published_date }}{% endif %}{% if item.confidence == "check" %}<span class="badge" title="Thin or single-sourced reporting; check before relying on it">Check</span>{% endif %}</p>
+      <p class="summary">{{ item.summary }}</p>
+      {% if item.so_what %}
+      <div class="sowhat"><strong>So what</strong><p>{{ item.so_what }}</p></div>
+      {% endif %}
+      {% if item.cves %}
+      <div class="tablewrap">
+      <table class="vulns">
+        <thead><tr><th>CVE</th><th>CVSS</th><th>CISA KEV</th><th>Patch</th></tr></thead>
+        <tbody>
+        {% for cve in item.cves %}
+          <tr>
+            <td>{% if cve.verified %}<a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}">{{ cve.cve_id }}</a>{% else %}{{ cve.cve_id }} <span class="unverified">(unverified)</span>{% endif %}</td>
+            <td>{% if cve.cvss_score is not none %}{{ cve.cvss_score }}{% if cve.cvss_severity %} {{ cve.cvss_severity|title }}{% endif %}{% if cve.cvss_version %} (v{{ cve.cvss_version }}){% endif %}{% else %}n/a{% endif %}</td>
+            <td{% if cve.kev %} class="kev-yes"{% endif %}>{% if cve.kev %}Yes{% if cve.kev_due_date %}, due <span class="nowrap">{{ cve.kev_due_date }}</span>{% endif %}{% else %}No{% endif %}</td>
+            <td>{{ cve.patch }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% endif %}
+      {% if item.claims %}
+      <details>
+        <summary>Evidence: {{ item.claims|length }} quoted claim{{ "s" if item.claims|length != 1 }}</summary>
+        <ol>
+          {% for claim in item.claims %}<li><q>{{ claim.quote }}</q></li>{% endfor %}
+        </ol>
+      </details>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+
+  <footer>
+    <p>{{ digest.items|length }} item{{ "s" if digest.items|length != 1 }}{% if stats.candidates is defined %} from {{ stats.candidates }} candidate article{{ "s" if stats.candidates != 1 }}{% endif %}{% if stats.extracted is defined %}, {{ stats.extracted }} with verifiable claims{% endif %}. Every fact above comes from a quoted passage in the linked article or from the NVD and CISA KEV records.</p>
+    <p>Generated {{ generated_at }}{% if stats.cost_usd is defined %} · model cost ${{ "%.2f"|format(stats.cost_usd) }}{% endif %}{% if index_url %} · <a href="{{ index_url|safe_url }}">Past issues</a>{% endif %}</p>
+  </footer>
+</div>
+</body>
+</html>

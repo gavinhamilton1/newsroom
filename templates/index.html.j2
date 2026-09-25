@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Architecture Dispatch Daily · Past issues</title>
+<style>
+  :root { --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --rule: #e3e0d8; --accent: #1f4e79; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --fg: #e9e7e1; --muted: #a09d95; --rule: #34332f; --accent: #8cb8e3; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 17px/1.6 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  .kicker { font: 600 12px/1.2 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 20px; padding-bottom: 14px;
+    border-bottom: 3px double var(--rule); }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--rule); }
+  li a { color: var(--fg); text-decoration: none; }
+  li a:hover { color: var(--accent); }
+  .count { font: 14px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--muted); white-space: nowrap; }
+  .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Architecture Dispatch Daily</p>
+  <h1>Past issues</h1>
+  {% if issues %}
+  <ul>
+    {% for issue in issues %}
+    <li><a href="{{ issue.href|safe_url }}">{{ issue.long_date }}</a><span class="count">{{ issue.count }} item{{ "s" if issue.count != 1 }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No issues yet.</p>
+  {% endif %}
+</div>
+</body>
+</html>

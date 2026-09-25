@@ -7,14 +7,18 @@ import logging
 import sys
 from datetime import UTC, datetime, timedelta
 
+import anthropic
+
 from . import config
-from .cost import BudgetExceeded, CostTracker, make_client
+from .cost import BudgetExceeded, CostTracker, ModelOutputError, make_client
 from .extract import Extraction, extract_all
 from .fetch import Fetcher
-from .publish import LocalStorage, ReadOnlyStorage, Storage, make_storage
+from .publish import LocalStorage, ReadOnlyStorage, Storage, make_storage, publish
+from .render import render_digest, render_index
 from .select import Score, SelectedItem, VulnLookup, select
 from .sources import Candidate, collect, load_sources, lookback_hours
 from .state import SeenIndex, dedupe
+from .write import write_digest
 
 log = logging.getLogger("dispatch_daily")
 
@@ -101,6 +105,8 @@ def run(args: argparse.Namespace) -> int:
         storage = ReadOnlyStorage(storage)
     seen = SeenIndex.load(storage)
 
+    if not settings.anthropic_api_key:
+        log.warning("ANTHROPIC_API_KEY is not set; relying on other SDK credential sources")
     client = make_client(settings)
     tracker = CostTracker(ceiling_usd=settings.max_cost_usd)
     fetcher = Fetcher()
@@ -117,15 +123,36 @@ def run(args: argparse.Namespace) -> int:
             client, tracker, extractions, lookup, max_items=settings.digest_max_items
         )
         print_selection(extractions, scores, items)
+        if args.dry_run:
+            log.info("Dry run: no writing call, nothing uploaded. %s", tracker.summary())
+            return 0
+        digest = write_digest(client, tracker, items, now.date())
     except BudgetExceeded as exc:
         log.error("Run aborted: %s. %s", exc, tracker.summary())
+        return 1
+    except (ModelOutputError, anthropic.APIError) as exc:
+        log.error("Run failed at the model stage: %s. %s", exc, tracker.summary())
         return 1
     finally:
         fetcher.close()
 
-    log.info(tracker.summary())
-    if args.dry_run:
-        return 0
+    digest.stats = {
+        "candidates": len(candidates),
+        "extracted": len(extractions),
+        "cost_usd": round(tracker.total_usd, 4),
+    }
+    date_str = now.date().isoformat()
+    html = render_digest(digest)
+    record = {
+        "generated_at": now.isoformat(timespec="seconds"),
+        "lookback_hours": hours,
+        "models": {"extract": config.EXTRACT_MODEL, "write": config.WRITE_MODEL},
+        "cost": tracker.summary(),
+        "digest": digest.to_dict(),
+        "scores": [vars(s) for s in scores],
+        "extractions": [e.to_dict() for e in extractions],
+    }
+    url = publish(storage, date_str, html, record, render_index)
 
     today = now.date()
     for c in candidates:
@@ -133,6 +160,8 @@ def run(args: argparse.Namespace) -> int:
     pruned = seen.prune(today)
     seen.save(storage)
     log.info("Seen index saved (%d entries, %d pruned)", len(seen.entries), pruned)
+    log.info(tracker.summary())
+    print(f"Digest: {url}")
     return 0
 
 

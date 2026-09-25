@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import re
 from pathlib import Path
 from typing import Protocol
 
@@ -119,3 +121,57 @@ class ReadOnlyStorage:
 
     def url_for(self, key: str) -> str:
         return self.inner.url_for(key)
+
+
+# --- Publishing ---------------------------------------------------------------
+
+ISSUES_KEY = "state/issues.json"
+HTML = "text/html; charset=utf-8"
+JSON = "application/json"
+
+
+def digest_key(date_str: str) -> str:
+    return f"digests/{date_str}.html"
+
+
+def record_key(date_str: str) -> str:
+    return f"records/{date_str}.json"
+
+
+def load_issues(storage: Storage) -> list[dict]:
+    """The list of published issues. Rebuilt from records/ if the manifest is missing."""
+    raw = storage.get_text(ISSUES_KEY)
+    if raw:
+        try:
+            return json.loads(raw)["issues"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            log.warning("issues.json unreadable; rebuilding from records/")
+    issues = []
+    for key in storage.list_keys("records/"):
+        m = re.search(r"(\d{4}-\d{2}-\d{2})\.json$", key)
+        if not m:
+            continue
+        try:
+            record = json.loads(storage.get_text(key) or "{}")
+            count = len(record.get("digest", {}).get("items", []))
+        except json.JSONDecodeError:
+            count = 0
+        issues.append({"date": m.group(1), "items": count})
+    return issues
+
+
+def publish(storage: Storage, date_str: str, html: str, record: dict, index_html_fn) -> str:
+    """Upload the digest and its extraction record, then regenerate the index.
+
+    `index_html_fn(issues)` renders the index page; passed in to keep this module free of
+    template code. Returns the digest's public URL.
+    """
+    storage.put_text(digest_key(date_str), html, HTML)
+    storage.put_text(record_key(date_str), json.dumps(record, indent=1, default=str), JSON)
+
+    issues = [i for i in load_issues(storage) if i.get("date") != date_str]
+    issues.append({"date": date_str, "items": len(record.get("digest", {}).get("items", []))})
+    issues.sort(key=lambda i: i["date"], reverse=True)
+    storage.put_text(ISSUES_KEY, json.dumps({"issues": issues}, indent=1), JSON)
+    storage.put_text("index.html", index_html_fn(issues), HTML)
+    return storage.url_for(digest_key(date_str))
