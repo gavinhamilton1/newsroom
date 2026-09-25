@@ -12,7 +12,7 @@ import anthropic
 
 from . import config
 from .cost import BudgetExceeded, CostTracker, ModelOutputError, make_client
-from .extract import Extraction, extract_all
+from .extract import Extraction, ExtractionAborted, extract_all
 from .fetch import Fetcher
 from .publish import LocalStorage, ReadOnlyStorage, Storage, make_storage, publish
 from .render import render_digest, render_index
@@ -118,18 +118,38 @@ def run(args: argparse.Namespace) -> int:
         if args.limit:
             candidates = candidates[: args.limit]
         print_candidates(candidates)
+        if not candidates:
+            log.error(
+                "No new articles from any source in the last %d hours; nothing published. "
+                "Check the source warnings above.",
+                hours,
+            )
+            return 1
         extractions = extract_all(client, tracker, fetcher, candidates)
         print_extractions(extractions)
+        if not extractions:
+            log.error(
+                "None of the %d articles produced verifiable claims; nothing published and "
+                "the seen index is unchanged so they are retried next run. %s",
+                len(candidates),
+                tracker.summary(),
+            )
+            return 1
         lookup = VulnLookup(storage, fetcher.client, settings.nvd_api_key)
         items, scores = select(
-            client, tracker, extractions, lookup, max_items=settings.digest_max_items
+            client,
+            tracker,
+            extractions,
+            lookup,
+            max_items=settings.digest_max_items,
+            min_items=settings.digest_min_items,
         )
         print_selection(extractions, scores, items)
         if args.dry_run:
             log.info("Dry run: no writing call, nothing uploaded. %s", tracker.summary())
             return 0
         digest = write_digest(client, tracker, items, now.date())
-    except BudgetExceeded as exc:
+    except (BudgetExceeded, ExtractionAborted) as exc:
         log.error("Run aborted: %s. %s", exc, tracker.summary())
         return 1
     except (ModelOutputError, anthropic.APIError) as exc:

@@ -106,6 +106,21 @@ SYSTEM_PROMPT = (
 MIN_QUOTE_CHARS = 12
 
 
+class ExtractionAborted(RuntimeError):
+    """Extraction is failing for every article (bad key, unknown model, a code error);
+    carrying on would only produce an empty digest."""
+
+
+# Errors that will not go away on the next article.
+FATAL_API_ERRORS = (
+    anthropic.AuthenticationError,
+    anthropic.PermissionDeniedError,
+    anthropic.NotFoundError,
+)
+# Abort if this many extraction calls in a row fail before any has succeeded.
+MAX_INITIAL_FAILURES = 5
+
+
 @dataclass
 class Claim:
     text: str
@@ -233,7 +248,9 @@ def _call(client: anthropic.Anthropic, user_message: str) -> anthropic.types.Mes
     return client.messages.create(
         model=config.EXTRACT_MODEL,
         max_tokens=config.EXTRACT_MAX_TOKENS,
-        temperature=config.EXTRACT_TEMPERATURE,
+        # anthropic 1.x removed sampling parameters from the method signature; Haiku 4.5
+        # still honours temperature, so it goes in the request body directly.
+        extra_body={"temperature": config.EXTRACT_TEMPERATURE},
         system=SYSTEM_PROMPT,
         tools=[EXTRACTION_TOOL],
         tool_choice={"type": "tool", "name": TOOL_NAME},
@@ -304,9 +321,10 @@ def extract_all(
     fetcher: Fetcher,
     candidates: list[Candidate],
 ) -> list[Extraction]:
-    """Fetch and extract each candidate. One article failing never stops the run; only
-    the spend cap does."""
+    """Fetch and extract each candidate. One article failing never stops the run, but
+    failures that affect every article (credentials, model, code) abort it."""
     results: list[Extraction] = []
+    attempts = failures = 0
     for i, candidate in enumerate(candidates, 1):
         try:
             article = fetcher.fetch_article(candidate.url)
@@ -316,19 +334,28 @@ def extract_all(
         except Exception:
             log.exception("[%d/%d] unexpected fetch error: %s", i, len(candidates), candidate.url)
             continue
+        attempts += 1
         try:
             extraction = extract_article(client, tracker, article, candidate)
         except BudgetExceeded:
             raise
-        except anthropic.APIError as exc:
+        except FATAL_API_ERRORS as exc:
+            raise ExtractionAborted(f"Anthropic API rejected the request: {exc}") from exc
+        except (anthropic.APIError, Exception) as exc:
+            failures += 1
             log.warning(
-                "[%d/%d] extraction API error for %s: %s", i, len(candidates), candidate.url, exc
+                "[%d/%d] extraction failed for %s: %s: %s",
+                i,
+                len(candidates),
+                candidate.url,
+                type(exc).__name__,
+                exc,
             )
-            continue
-        except Exception:
-            log.exception(
-                "[%d/%d] unexpected extraction error: %s", i, len(candidates), candidate.url
-            )
+            if failures == attempts and failures >= MAX_INITIAL_FAILURES:
+                raise ExtractionAborted(
+                    f"the first {failures} extraction calls all failed; last error: "
+                    f"{type(exc).__name__}: {exc}"
+                ) from exc
             continue
         if extraction:
             log.info(

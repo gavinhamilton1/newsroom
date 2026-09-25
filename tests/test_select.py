@@ -203,3 +203,32 @@ def test_score_extractions_parses_and_clamps(monkeypatch):
     monkeypatch.setattr(select, "call_structured", fake_call)
     scores = select.score_extractions(None, None, extractions)
     assert [(s.url, s.score) for s in scores] == [("https://a/1", 10), ("https://a/2", 5)]
+
+
+def test_thin_day_is_topped_up_to_minimum():
+    extractions = [
+        make_extraction("https://a/good"),
+        make_extraction("https://a/low1"),
+        make_extraction("https://a/low2"),
+        make_extraction("https://a/other", topics=["other"]),
+        make_extraction("https://a/mkt", marketing=True),
+    ]
+    scores = [
+        select.Score("https://a/good", 8, "cyber", "r"),
+        select.Score("https://a/low1", 3, "ai", "r"),
+        select.Score("https://a/low2", 1, "fintech", "r"),
+    ]
+    kept = select.apply_scores(extractions, scores, max_items=10, min_items=4)
+    urls = [e.url for e, _ in kept]
+    assert urls[0] == "https://a/good"
+    assert urls[1:] == ["https://a/low1", "https://a/low2", "https://a/other"]
+    assert "https://a/mkt" not in urls  # marketing only if nothing else is left
+
+
+def test_minimum_never_exceeds_available_or_maximum():
+    extractions = [make_extraction("u1", marketing=True)]
+    kept = select.apply_scores(extractions, [], max_items=10, min_items=5)
+    assert [e.url for e, _ in kept] == ["u1"]  # even marketing beats an empty digest
+    many = [make_extraction(f"u{i}") for i in range(8)]
+    kept = select.apply_scores(many, [], max_items=3, min_items=5)
+    assert len(kept) == 3

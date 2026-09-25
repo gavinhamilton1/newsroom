@@ -115,7 +115,7 @@ def call_structured(
         },
     }
     if config.WRITE_MODEL_ACCEPTS_TEMPERATURE:
-        kwargs["temperature"] = config.WRITE_TEMPERATURE
+        kwargs["extra_body"] = {"temperature": config.WRITE_TEMPERATURE}
     message = _stream_final(client, **kwargs)
     tracker.record(config.WRITE_MODEL, message.usage)
     if message.stop_reason == "refusal":

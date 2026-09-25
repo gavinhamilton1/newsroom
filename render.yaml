@@ -27,6 +27,8 @@ services:
         value: newsroom
       - key: DIGEST_MAX_ITEMS
         sync: false
+      - key: DIGEST_MIN_ITEMS
+        value: "5"
       - key: LOOKBACK_HOURS
         sync: false
       - key: LOG_LEVEL

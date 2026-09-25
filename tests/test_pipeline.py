@@ -11,6 +11,7 @@ from dispatch_daily.fetch import Article, extract_main_text
 from dispatch_daily.publish import LocalStorage
 from dispatch_daily.select import CveInfo
 from dispatch_daily.sources import Candidate
+from tests.conftest import assert_sdk_accepts
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SUMMARY = (
@@ -55,11 +56,13 @@ class FakeMessages:
         self.create_calls, self.stream_calls = [], []
 
     def create(self, **kwargs):  # Haiku extraction
+        assert_sdk_accepts("create", kwargs)
         self.create_calls.append(kwargs)
         data = json.loads((FIXTURES / "article_gateway_cve.response.json").read_text())
         return anthropic.types.Message.model_validate(data)
 
     def stream(self, **kwargs):  # Opus ranking, then writing
+        assert_sdk_accepts("stream", kwargs)
         self.stream_calls.append(kwargs)
         if len(self.stream_calls) == 1:
             return FakeStream(
@@ -130,9 +133,9 @@ def test_full_run_no_upload(pipeline, capsys):
 
     # One Haiku call at temperature 0; two Opus calls without temperature.
     assert len(client.messages.create_calls) == 1
-    assert client.messages.create_calls[0]["temperature"] == 0
+    assert client.messages.create_calls[0]["extra_body"] == {"temperature": 0}
     assert len(client.messages.stream_calls) == 2
-    assert all("temperature" not in c for c in client.messages.stream_calls)
+    assert all("extra_body" not in c for c in client.messages.stream_calls)
     # The writing call never sees the article text.
     writing_prompt = client.messages.stream_calls[1]["messages"][0]["content"]
     assert "<article>" not in writing_prompt
@@ -169,3 +172,63 @@ def test_missing_api_key_exits_early(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "")
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     assert main.main(["--dry-run"]) == 2
+
+
+def _auth_error():
+    import httpx
+
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    return anthropic.AuthenticationError(
+        "invalid x-api-key", response=httpx.Response(401, request=request), body=None
+    )
+
+
+def test_rejected_api_key_aborts_after_one_call(pipeline, monkeypatch):
+    client, out = pipeline
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        raise _auth_error()
+
+    monkeypatch.setattr(client.messages, "create", create)
+    monkeypatch.setattr(
+        main,
+        "collect",
+        lambda *a, **k: [
+            Candidate("S", "cyber", f"{URL}/{i}", f"Story number {i} about {i * 7919}", None)
+            for i in range(20)
+        ],
+    )
+    assert main.main(["--no-upload"]) == 1
+    assert len(calls) == 1
+    assert not any(out.rglob("*"))  # no digest, no seen index
+
+
+def test_repeated_failures_abort_without_publishing(pipeline, monkeypatch):
+    client, out = pipeline
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        raise RuntimeError("something systematic")
+
+    monkeypatch.setattr(client.messages, "create", create)
+    monkeypatch.setattr(
+        main,
+        "collect",
+        lambda *a, **k: [
+            Candidate("S", "cyber", f"{URL}/{i}", f"Story number {i} about {i * 7919}", None)
+            for i in range(20)
+        ],
+    )
+    assert main.main(["--no-upload"]) == 1
+    assert len(calls) == 5
+    assert not any(out.rglob("*"))
+
+
+def test_no_extractions_publishes_nothing(pipeline, monkeypatch):
+    _, out = pipeline
+    monkeypatch.setattr(main, "extract_all", lambda *a, **k: [])
+    assert main.main(["--no-upload"]) == 1
+    assert not any(out.rglob("*"))

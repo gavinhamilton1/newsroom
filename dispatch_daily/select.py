@@ -85,22 +85,62 @@ def prefilter(extractions: list[Extraction]) -> list[Extraction]:
 
 
 def apply_scores(
-    extractions: list[Extraction], scores: list[Score], max_items: int
+    extractions: list[Extraction], scores: list[Score], max_items: int, min_items: int = 0
 ) -> list[tuple[Extraction, Score]]:
-    """Filter by score, marketing flag and topic, then keep the top `max_items`."""
+    """Rank by score and keep up to `max_items`.
+
+    Items scoring under MIN_RELEVANCE_SCORE, vendor marketing and 'other'-only items are
+    left out first. If that leaves fewer than `min_items`, the best of what was left out
+    fills the gap (non-marketing before marketing, then by score), so a day with any
+    readable news always produces a digest.
+    """
     by_url = {s.url: s for s in scores}
-    ranked: list[tuple[Extraction, Score]] = []
-    for e in prefilter(extractions):
+    preferred: list[tuple[Extraction, Score]] = []
+    reserve: list[tuple[Extraction, Score]] = []
+    for e in extractions:
         s = by_url.get(e.url)
         if s is None:
-            log.warning("No score returned for %s; dropped", e.url)
+            # Not scored (marketing and other-only items are filtered before the call).
+            s = Score(e.url, 0, _fallback_category(e), "not scored")
+        if e.is_vendor_marketing:
+            reason = "vendor marketing"
+        elif set(e.topics) <= {"other"}:
+            reason = "topic 'other' only"
+        elif s.score < config.MIN_RELEVANCE_SCORE:
+            reason = f"score {s.score}"
+        else:
+            preferred.append((e, s))
             continue
-        if s.score < config.MIN_RELEVANCE_SCORE:
-            log.info("Dropped (score %d): %s", s.score, e.headline)
-            continue
-        ranked.append((e, s))
-    ranked.sort(key=lambda pair: pair[1].score, reverse=True)
-    return ranked[:max_items]
+        log.info("Held back (%s): %s", reason, e.headline)
+        reserve.append((e, s))
+
+    preferred.sort(key=lambda pair: pair[1].score, reverse=True)
+    chosen = preferred[:max_items]
+    shortfall = min(min_items, max_items) - len(chosen)
+    if shortfall > 0 and reserve:
+        reserve.sort(
+            key=lambda pair: (not pair[0].is_vendor_marketing, pair[1].score), reverse=True
+        )
+        topup = reserve[:shortfall]
+        for e, _ in topup:
+            log.info("Added to reach the minimum of %d items: %s", min_items, e.headline)
+        chosen.extend(topup)
+    return chosen
+
+
+_SOURCE_TO_SECTION = {
+    "fin": "fintech",
+    "cyber": "cyber",
+    "vuln": "vulnerabilities",
+    "ai": "ai",
+    "std": "standards",
+    "pqc": "standards",
+    "arch": "engineering",
+}
+
+
+def _fallback_category(e: Extraction) -> str:
+    return _SOURCE_TO_SECTION.get(e.source_category, "engineering")
 
 
 def group_by_section(items: list[SelectedItem]) -> list[tuple[str, str, list[SelectedItem]]]:
@@ -316,10 +356,12 @@ def select(
     extractions: list[Extraction],
     lookup: VulnLookup,
     max_items: int,
+    min_items: int = 0,
 ) -> tuple[list[SelectedItem], list[Score]]:
-    candidates = prefilter(extractions)
-    scores = score_extractions(client, tracker, candidates)
-    chosen = apply_scores(candidates, scores, max_items)
+    # Only items that can make the digest on merit are sent for scoring; the rest are
+    # held in reserve in case the day is thin.
+    scores = score_extractions(client, tracker, prefilter(extractions))
+    chosen = apply_scores(extractions, scores, max_items, min_items)
     items = [SelectedItem(e, s) for e, s in chosen]
     attach_cves(items, lookup)
     return items, scores

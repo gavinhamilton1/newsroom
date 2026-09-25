@@ -8,6 +8,7 @@ from dispatch_daily import extract
 from dispatch_daily.cost import BudgetExceeded, CostTracker
 from dispatch_daily.fetch import Article, extract_main_text
 from dispatch_daily.sources import Candidate
+from tests.conftest import assert_sdk_accepts
 
 FIXTURES = Path(__file__).parent / "fixtures"
 URL = "https://news.example.com/2026/09/23/examplar-gateway"
@@ -99,6 +100,7 @@ def test_extract_article_uses_haiku_at_temperature_zero(article, candidate, reco
 
     class FakeMessages:
         def create(self, **kwargs):
+            assert_sdk_accepts("create", kwargs)
             calls.append(kwargs)
             return recorded
 
@@ -109,7 +111,7 @@ def test_extract_article_uses_haiku_at_temperature_zero(article, candidate, reco
     result = extract.extract_article(FakeClient(), tracker, article, candidate)
     assert result is not None
     assert calls[0]["model"] == "claude-haiku-4-5-20251001"
-    assert calls[0]["temperature"] == 0
+    assert calls[0]["extra_body"] == {"temperature": 0}
     assert calls[0]["tool_choice"] == {"type": "tool", "name": "record_extraction"}
     assert "<article>" in calls[0]["messages"][0]["content"]
     assert tracker.total_usd == pytest.approx((1450 * 1.0 + 820 * 5.0) / 1_000_000)
@@ -119,3 +121,10 @@ def test_budget_cap_aborts(recorded):
     tracker = CostTracker(ceiling_usd=0.001)
     with pytest.raises(BudgetExceeded):
         tracker.record("claude-haiku-4-5-20251001", recorded.usage)
+
+
+def test_sdk_signature_guard_rejects_removed_parameters():
+    with pytest.raises(TypeError):
+        assert_sdk_accepts(
+            "create", {"model": "m", "max_tokens": 1, "messages": [], "temperature": 0}
+        )

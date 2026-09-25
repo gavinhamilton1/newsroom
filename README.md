@@ -9,7 +9,7 @@ The digest follows the format of the monthly Architecture Dispatch newsletter, w
 - **Every fact is traceable to a quote.** The extraction step returns claims with verbatim quotes. Code then checks each quote against the fetched text and drops any claim whose quote is missing, or whose numbers, versions, dates or IDs are not in the quote. The writing step sees only the surviving claims and quotes. Its output is checked again, and any sentence stating a number or identifier that isn't in that item's quotes or NVD/KEV record is removed.
 - **Models never find the news.** The app fetches from `sources.yaml`; models only process fetched text.
 - **No paywall circumvention.** Public pages only, `robots.txt` is honoured, the User-Agent describes the app, and a source that blocks or errors is skipped.
-- **One failure never sinks the run.** Every source and article is processed inside its own try/except. Only the spend cap or a failed model call stops a run.
+- **One failure never sinks the run, but a systemic one stops it loudly.** Every source and article is processed inside its own try/except. A rejected API key or model, the first five extraction calls all failing, or no article producing claims stops the run with exit code 1. Nothing is published and the seen index is left alone, so the articles are retried next time. An empty digest therefore always means something broke, and Render shows the run as failed.
 
 ## Local setup
 
@@ -36,6 +36,7 @@ Fill in `.env` (loaded automatically by `python-dotenv` for local runs only; Ren
 | `R2_PUBLIC_BASE_URL` | Public URL of the bucket (r2.dev subdomain or custom domain), no trailing slash |
 | `R2_PREFIX` | Optional folder inside the bucket (e.g. `newsroom`); every key the app reads or writes goes under it |
 | `DIGEST_MAX_ITEMS` | Maximum items in a digest (default 10) |
+| `DIGEST_MIN_ITEMS` | Minimum items in a digest (default 5); a thin day is topped up with the best of the rest |
 | `LOOKBACK_HOURS` | Normal lookback window (default 24; Mondays use 72) |
 | `LOG_LEVEL` | Default `INFO` |
 | `MAX_COST_USD` | Optional. Per-run Anthropic spend ceiling (default 2.0) |
@@ -88,7 +89,7 @@ A production run (what Render executes) publishes to R2 and prints `Digest: <url
 .venv/bin/python -m dispatch_daily.main
 ```
 
-Exit codes: `0` success, `1` the run was aborted (spend cap reached, or a model call failed or refused), `2` configuration problem.
+Exit codes: `0` success, `1` the run was aborted (spend cap reached, extraction failing across the board, no new articles, or a model call failed or refused), `2` configuration problem. Nothing is published on a non-zero exit.
 
 ## Deploying on Render
 
@@ -131,9 +132,9 @@ Sources without a feed are still tried: the listing page is fetched and only lin
 2. **Dedupe** (`state.py`). Candidates whose URL hash is in `state/seen.json` (kept for 90 days) are dropped, as are near-duplicate titles within the run (similarity above 0.9).
 3. **Fetch** (`fetch.py`). `trafilatura` extracts the main text. Anything under 400 characters counts as a failed extraction; text is truncated to 12,000 characters. The final URL, HTTP status, fetch time and metadata date are recorded.
 4. **Extract** (`extract.py`). One Haiku call per article at temperature 0, with a forced tool schema, returns a headline, summary, claims with quotes, entities, topics and flags. Code then validates every claim: the quote must appear verbatim in the fetched text (whitespace and curly quotes normalised), and every number, version, date or ID in the claim must appear in its quote. Entity names must occur in the article. Articles with no surviving claims are dropped.
-5. **Select** (`select.py`). Vendor marketing and `other`-only items are dropped. One Opus call scores the rest from 0 to 10, with a category and a one-line reason, using only the compact records (headline, summary, entities, topics). Scores under 4 are dropped and the top 10 kept. Any CVE ID in the validated identifiers or quotes is looked up in NVD and the CISA KEV feed (cached for 24 hours in `state/lookups/`). IDs that NVD doesn't know are labelled `(unverified)` wherever they appear.
+5. **Select** (`select.py`). Vendor marketing and `other`-only items are dropped. One Opus call scores the rest from 0 to 10, with a category and a one-line reason, using only the compact records (headline, summary, entities, topics). Items scoring 4 or more are kept, highest first, up to 10. If fewer than 5 qualify, the best of the rest (lower scores and `other` topics, then vendor marketing as a last resort) fill the gap, so every working run produces a digest. Any CVE ID in the validated identifiers or quotes is looked up in NVD and the CISA KEV feed (cached for 24 hours in `state/lookups/`). IDs that NVD doesn't know are labelled `(unverified)` wherever they appear.
 6. **Write** (`write.py`). One Opus call receives only the validated claims, quotes and NVD/KEV records, never article text. It returns a headline, summary, "So what" and confidence per item, plus a two-sentence intro, in British English house style. Code removes any sentence with an unsupported fact and marks that item `check`.
-7. **Render and publish** (`render.py`, `publish.py`). Jinja2 renders a self-contained page. The job uploads `digests/YYYY-MM-DD.html` and `records/YYYY-MM-DD.json` (every claim, quote, score and dropped claim), regenerates `index.html`, updates `state/seen.json`, and prints the digest URL. If nothing survives selection, a short "nothing significant was found" issue is still published, so a quiet day can be told apart from a failed run.
+7. **Render and publish** (`render.py`, `publish.py`). Jinja2 renders a self-contained page. The job uploads `digests/YYYY-MM-DD.html` and `records/YYYY-MM-DD.json` (every claim, quote, score and dropped claim), regenerates `index.html`, updates `state/seen.json`, and prints the digest URL.
 
 To trace a fact in a digest, expand "Evidence" under the item to see its quotes, or open that day's `records/*.json`.
 
