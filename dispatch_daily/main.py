@@ -8,6 +8,8 @@ import sys
 from datetime import UTC, datetime, timedelta
 
 from . import config
+from .cost import BudgetExceeded, CostTracker, make_client
+from .extract import Extraction, extract_all
 from .fetch import Fetcher
 from .publish import LocalStorage, Storage, make_storage
 from .sources import Candidate, collect, load_sources, lookback_hours
@@ -38,6 +40,17 @@ def print_candidates(candidates: list[Candidate]) -> None:
     print(f"\n{len(candidates)} candidate(s)\n")
 
 
+def print_extractions(extractions: list[Extraction]) -> None:
+    print(f"\n{'CLAIMS':>6} {'DROP':>4} {'MKT':<3} {'TOPICS':<32} HEADLINE")
+    for e in extractions:
+        mkt = "yes" if e.is_vendor_marketing else ""
+        topics = ",".join(e.topics)[:32]
+        print(
+            f"{len(e.claims):>6} {len(e.dropped_claims):>4} {mkt:<3} {topics:<32} {e.headline[:70]}"
+        )
+    print(f"\n{len(extractions)} article(s) extracted\n")
+
+
 def run(args: argparse.Namespace) -> int:
     settings = config.load_settings()
     config.setup_logging(settings.log_level)
@@ -62,16 +75,24 @@ def run(args: argparse.Namespace) -> int:
         storage = make_storage(settings, local=False)
     seen = SeenIndex.load(storage)
 
+    client = make_client(settings)
+    tracker = CostTracker(ceiling_usd=settings.max_cost_usd)
     fetcher = Fetcher()
     try:
         candidates = collect(fetcher, sources, since, now)
         candidates = dedupe(candidates, seen)
         if args.limit:
             candidates = candidates[: args.limit]
+        print_candidates(candidates)
+        extractions = extract_all(client, tracker, fetcher, candidates)
+    except BudgetExceeded as exc:
+        log.error("Run aborted: %s. %s", exc, tracker.summary())
+        return 1
     finally:
         fetcher.close()
 
-    print_candidates(candidates)
+    print_extractions(extractions)
+    log.info(tracker.summary())
 
     if args.dry_run:
         return 0

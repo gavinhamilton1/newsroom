@@ -1,0 +1,65 @@
+{
+  "id": "msg_fixture_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 1450, "output_tokens": 820},
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "toolu_fixture_001",
+      "name": "record_extraction",
+      "input": {
+        "headline": "Critical flaw in Examplar Edge Gateway lets attackers bypass OIDC checks",
+        "publication": "Fixture Media",
+        "published_date": "2026-09-23",
+        "summary": "Examplar Networks fixed a critical authentication bypass in Edge Gateway. The flaw lets an attacker present an unsigned ID token. Version 5.2.8 fixes it.",
+        "claims": [
+          {
+            "text": "The flaw is tracked as CVE-2026-41234 and rated 9.8 on CVSS v3.1.",
+            "quote": "tracked as CVE-2026-41234 and rated 9.8 on the CVSS v3.1 scale"
+          },
+          {
+            "text": "The gateway trusted the algorithm header supplied by the client.",
+            "quote": "gateway \"trusted the alg header supplied by the client\""
+          },
+          {
+            "text": "Examplar says version 5.2.8, published on 22 September, fixes the validation logic.",
+            "quote": "Examplar said version 5.2.8, published on\n  22 September, corrects the validation logic."
+          },
+          {
+            "text": "Northwind Security found 1,200 internet-facing instances running an affected version in a scan on 20 September.",
+            "quote": "Northwind Security said it found 1,200 internet-facing Edge Gateway instances running an affected version during a scan on 20 September."
+          },
+          {
+            "text": "Examplar confirmed active exploitation in the wild.",
+            "quote": "Examplar confirmed the flaw is being actively exploited in the wild"
+          },
+          {
+            "text": "Northwind Security found 1,500 exposed instances.",
+            "quote": "Northwind Security said it found 1,200 internet-facing Edge Gateway instances"
+          },
+          {
+            "text": "Customers who cannot upgrade should enable strict_jwks.",
+            "quote": "customers who cannot upgrade should set the strict_jwks option to true"
+          },
+          {
+            "text": "The flaw affects all versions of Edge Gateway.",
+            "quote": ""
+          }
+        ],
+        "entities": {
+          "vendors": ["Examplar Networks", "Northwind Security", "Contoso"],
+          "products": ["Edge Gateway"],
+          "researchers": ["Priya Raman"],
+          "identifiers": ["CVE-2026-41234", "RFC 8725", "CVE-2026-99999"]
+        },
+        "topics": ["vulnerability", "identity", "ingress"],
+        "is_vendor_marketing": false,
+        "paywalled_or_partial": false
+      }
+    }
+  ]
+}

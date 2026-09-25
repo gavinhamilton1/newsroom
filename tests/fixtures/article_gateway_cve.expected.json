@@ -1,0 +1,21 @@
+{
+  "kept_claims": [
+    "The flaw is tracked as CVE-2026-41234 and rated 9.8 on CVSS v3.1.",
+    "The gateway trusted the algorithm header supplied by the client.",
+    "Examplar says version 5.2.8, published on 22 September, fixes the validation logic.",
+    "Northwind Security found 1,200 internet-facing instances running an affected version in a scan on 20 September."
+  ],
+  "dropped_reasons": {
+    "Examplar confirmed active exploitation in the wild.": "quote not found in article text",
+    "Northwind Security found 1,500 exposed instances.": "claim states ['1,500'] not present in its quote",
+    "Customers who cannot upgrade should enable strict_jwks.": "quote not found in article text",
+    "The flaw affects all versions of Edge Gateway.": "empty or too-short quote"
+  },
+  "entities": {
+    "vendors": ["Examplar Networks", "Northwind Security"],
+    "products": ["Edge Gateway"],
+    "researchers": ["Priya Raman"],
+    "identifiers": ["CVE-2026-41234", "RFC 8725"]
+  },
+  "topics": ["vulnerability", "identity", "ingress"]
+}

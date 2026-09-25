@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Critical flaw in Examplar Edge Gateway lets attackers bypass OIDC checks</title>
+  <meta property="article:published_time" content="2026-09-23T14:05:00Z">
+  <meta name="author" content="Jane Fixture">
+</head>
+<body>
+<nav><a href="/">Home</a> | <a href="/news">News</a> | <a href="/subscribe">Subscribe</a></nav>
+<article>
+  <h1>Critical flaw in Examplar Edge Gateway lets attackers bypass OIDC checks</h1>
+  <p class="byline">By Jane Fixture, 23 September 2026</p>
+  <p>Examplar Networks has released fixes for a critical authentication bypass in its Edge
+  Gateway product, tracked as CVE-2026-41234 and rated 9.8 on the CVSS v3.1 scale. The flaw
+  affects Edge Gateway versions 5.2.0 through 5.2.7 and allows an unauthenticated attacker to
+  present a crafted ID token that the gateway accepts without verifying its signature.</p>
+  <p>The issue was reported by researcher Priya Raman of Northwind Security, who said the
+  gateway &#8220;trusted the alg header supplied by the client&#8221; when validating tokens
+  issued by an external identity provider. Examplar said version 5.2.8, published on
+  22 September, corrects the validation logic.</p>
+  <p>According to the advisory, customers who cannot upgrade immediately should set the
+  strict_jwks option to true, which forces the gateway to reject tokens whose algorithm does
+  not match the key type registered for the issuer. The company said it had seen no evidence
+  of exploitation at the time of publication.</p>
+  <p>Northwind Security said it found 1,200 internet-facing Edge Gateway instances running an
+  affected version during a scan on 20 September. Raman said organisations using the gateway
+  in front of payment APIs should treat the upgrade as urgent.</p>
+  <p>The disclosure follows a similar token validation issue in another vendor's ingress
+  controller earlier this year, which prompted renewed attention to RFC 8725, the JSON Web
+  Token Best Current Practices document.</p>
+</article>
+<footer>Copyright Fixture Media. This article is a test fixture and describes fictional events.</footer>
+</body>
+</html>
