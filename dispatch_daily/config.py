@@ -86,9 +86,7 @@ USER_AGENT = (
 )
 HTTP_TIMEOUT_SECONDS = 20.0
 NVD_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-KEV_FEED_URL = (
-    "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-)
+KEV_FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
 # --- Prompts ----------------------------------------------------------------
 
@@ -104,7 +102,7 @@ READER_BRIEF = (
 
 HOUSE_STYLE = (
     "Write in British English. No em-dashes; use commas, semicolons or parentheses. No "
-    "emoji. Avoid the \"this is X, not Y\" construction: say what something is. Avoid "
+    'emoji. Avoid the "this is X, not Y" construction: say what something is. Avoid '
     "trailing fragments tacked on after a comma; finish the sentence properly. Prefer longer "
     "connected sentences over short punchy ones. State facts plainly, and where the "
     "reporting is uncertain, say so."

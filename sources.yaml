@@ -27,19 +27,19 @@ sources:
     url: "https://www.fsisac.com/newsroom"
     category: fin
     type: curated
-    feed: null
+    feed: "https://www.fsisac.com/newsroom/rss.xml"
     note: "Low volume; mostly organisational announcements. Check monthly."
   - name: "American Banker"
     url: "https://www.americanbanker.com"
     category: fin
     type: news
-    feed: null
+    feed: "https://www.americanbanker.com/rss/"
     note: "Strong on bank regulation and technology. Partly paywalled."
   - name: "ABA Banking Journal"
     url: "https://bankingjournal.aba.com"
     category: fin
     type: news
-    feed: null
+    feed: "https://bankingjournal.aba.com/feed/"
     note: "Regulatory and industry updates for US banks."
   - name: "FinTech Futures"
     url: "https://www.fintechfutures.com"
@@ -51,13 +51,13 @@ sources:
     url: "https://www.pymnts.com"
     category: fin
     type: news
-    feed: null
+    feed: "https://www.pymnts.com/feed/"
     note: "Payments and bank regulation. Homepage dates are unclear; search by topic."
   - name: "U.S. Treasury press releases"
     url: "https://home.treasury.gov/news/press-releases"
     category: fin
     type: primary
-    feed: null
+    feed: "https://home.treasury.gov/news/press-releases/index.xml"
     note: "Source for sector-wide initiatives such as the Quantum-Readiness Task Force."
   - name: "Infosecurity Magazine"
     url: "https://www.infosecurity-magazine.com"
@@ -68,7 +68,7 @@ sources:
     url: "https://www.csoonline.com"
     category: cyber
     type: news
-    feed: null
+    feed: "https://www.csoonline.com/rss/"
     note: "Good depth on identity gateway and session hijacking attacks."
   - name: "Dark Reading"
     url: "https://www.darkreading.com"
@@ -79,13 +79,13 @@ sources:
     url: "https://www.biometricupdate.com"
     category: cyber
     type: news
-    feed: null
+    feed: "https://www.biometricupdate.com/feed/"
     note: "Digital identity, mDLs, KYC and voice fraud."
   - name: "The Hacker News"
     url: "https://thehackernews.com"
     category: cyber
     type: news
-    feed: null
+    feed: "https://feeds.feedburner.com/TheHackersNews"
     note: "Fast coverage of research and campaigns; verify details at the original research."
   - name: "OODA Loop"
     url: "https://oodaloop.com"
@@ -97,13 +97,13 @@ sources:
     url: "https://www.helpnetsecurity.com"
     category: cyber
     type: news
-    feed: null
+    feed: "https://www.helpnetsecurity.com/feed/"
     note: "Often the original publisher of vendor research reports."
   - name: "Cybersecurity News"
     url: "https://cybersecuritynews.com"
     category: cyber
     type: news
-    feed: null
+    feed: "https://cybersecuritynews.com/feed/"
   - name: "Nextgov/FCW Cybersecurity"
     url: "https://www.nextgov.com/cybersecurity"
     category: cyber
@@ -144,13 +144,13 @@ sources:
     url: "https://istio.io/latest/news/security/"
     category: vuln
     type: primary
-    feed: null
+    feed: "https://istio.io/latest/news/feed.xml"
     note: "Istio and bundled Envoy CVEs; relevant to service mesh and ingress."
   - name: "Spring Security advisories"
     url: "https://spring.io/security"
     category: vuln
     type: primary
-    feed: null
+    feed: "https://spring.io/blog.atom"
     note: "Spring Framework and Boot CVEs for Java runtimes."
   - name: "Cloud Security Alliance Lab Space"
     url: "https://labs.cloudsecurityalliance.org"
@@ -162,7 +162,7 @@ sources:
     url: "https://adversa.ai/blog"
     category: ai
     type: curated
-    feed: null
+    feed: "https://adversa.ai/rss.xml"
     note: "Monthly MCP and agent security roundups."
   - name: "Manifold Security blog"
     url: "https://www.manifold.security/blog"
@@ -174,18 +174,18 @@ sources:
     url: "https://techcrunch.com/category/artificial-intelligence"
     category: ai
     type: news
-    feed: null
+    feed: "https://techcrunch.com/category/artificial-intelligence/feed/"
   - name: "IETF OAuth working group"
     url: "https://datatracker.ietf.org/wg/oauth/documents/"
     category: std
     type: primary
-    feed: null
+    feed: "https://datatracker.ietf.org/wg/oauth/documents/feed/"
     note: "Track document history for last calls and IESG approvals."
   - name: "NIST News"
     url: "https://www.nist.gov/news-events/news"
     category: std
     type: primary
-    feed: null
+    feed: "https://www.nist.gov/news-events/news/rss.xml"
     note: "800-63, token protection, AI agent standards and PQC."
   - name: "Model Context Protocol"
     url: "https://modelcontextprotocol.io/specification"
@@ -197,19 +197,19 @@ sources:
     url: "https://thequantuminsider.com"
     category: pqc
     type: news
-    feed: null
+    feed: "https://thequantuminsider.com/feed/"
     note: "Filter for finance and PQC; much of it is quantum computing industry news."
   - name: "InfoQ"
     url: "https://www.infoq.com"
     category: arch
     type: news
-    feed: null
+    feed: "https://www.infoq.com/feed/"
     note: "Best source for architecture practice. Only the first news pages paginate reliably."
   - name: "The New Stack"
     url: "https://thenewstack.io"
     category: arch
     type: news
-    feed: null
+    feed: "https://thenewstack.io/blog/feed/"
     note: "Platform engineering and AI coding data; check sponsorship disclosures."
   - name: "CIO Applications"
     url: "https://www.cioapplications.com"
