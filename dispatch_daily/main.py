@@ -9,7 +9,9 @@ from datetime import UTC, datetime, timedelta
 
 from . import config
 from .fetch import Fetcher
+from .publish import LocalStorage, Storage, make_storage
 from .sources import Candidate, collect, load_sources, lookback_hours
+from .state import SeenIndex, dedupe
 
 log = logging.getLogger("dispatch_daily")
 
@@ -51,14 +53,35 @@ def run(args: argparse.Namespace) -> int:
             log.error("No source named %r in sources.yaml", args.source)
             return 2
 
-    max_total = min(config.MAX_CANDIDATES, args.limit) if args.limit else config.MAX_CANDIDATES
+    # Where state and output live. --no-upload keeps everything under ./out/. A dry run
+    # reads the real seen index when R2 is configured but never writes anything.
+    storage: Storage
+    if args.no_upload or (args.dry_run and not settings.r2_configured):
+        storage = LocalStorage()
+    else:
+        storage = make_storage(settings, local=False)
+    seen = SeenIndex.load(storage)
+
     fetcher = Fetcher()
     try:
-        candidates = collect(fetcher, sources, since, now, max_total=max_total)
+        candidates = collect(fetcher, sources, since, now)
+        candidates = dedupe(candidates, seen)
+        if args.limit:
+            candidates = candidates[: args.limit]
     finally:
         fetcher.close()
 
     print_candidates(candidates)
+
+    if args.dry_run:
+        return 0
+
+    today = now.date()
+    for c in candidates:
+        seen.add(c.url, today)
+    pruned = seen.prune(today)
+    seen.save(storage)
+    log.info("Seen index saved (%d entries, %d pruned)", len(seen.entries), pruned)
     return 0
 
 
